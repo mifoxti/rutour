@@ -16,10 +16,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="wrap_content">
 
             <!-- Media -->
             <ImageView
@@ -30,11 +29,25 @@
                 android:scaleType="centerCrop"
                 app:srcCompat="@drawable/zaradye" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/galleryBtnLove"
+                style="?attr/materialIconButtonFilledStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:icon="@drawable/ic_heart"
+                android:alpha="0.85"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="@id/placeImage"
+                app:layout_constraintTop_toBottomOf="@id/placeImage"
+                app:layout_constraintVertical_bias="0.5" />
+
             <LinearLayout
+                android:id="@+id/textContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="16dp"
+                app:layout_constraintTop_toBottomOf="@id/placeImage">
 
                 <!-- Title, secondary and supporting text -->
                 <TextView
@@ -60,24 +73,18 @@
 
             </LinearLayout>
 
-            <!-- Buttons -->
-            <LinearLayout
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/viewButton"
+                style="?attr/borderlessButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/viewButton"
-                    style="?attr/borderlessButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/my_font"
-                    android:text="Посмотреть"
-                    android:textSize="18sp" />
-            </LinearLayout>
-
-        </LinearLayout>
+                android:fontFamily="@font/my_font"
+                app:layout_constraintTop_toBottomOf="@id/textContainer"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="8dp"
+                android:text="Посмотреть"
+                android:textSize="18sp" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </com.google.android.material.card.MaterialCardView>
 

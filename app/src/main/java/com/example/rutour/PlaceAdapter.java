@@ -1,17 +1,14 @@
 package com.example.rutour;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.os.Bundle;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -20,95 +17,106 @@ import com.google.android.material.button.MaterialButton;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHolder> {
+public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.ViewHolder> {
 
+    private List<Place> places;
+    private DBHelper dbHelper;
     private Context context;
-    private List<Place> placeList;
+
+    public void setPlaces(List<Place> places) {
+        this.places = places;
+        notifyDataSetChanged();
+    }
 
     public PlaceAdapter(Context context) {
         this.context = context;
-        this.placeList = new ArrayList<>();
+        this.dbHelper = new DBHelper(context);
+        this.places = new ArrayList<>(); // Инициализируем список
         loadPlacesFromDatabase();
     }
 
     public void loadPlacesFromDatabase() {
-        DBHelper dbHelper = new DBHelper(context);
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-        placeList.clear();
-
-        Cursor cursor = db.query(DBHelper.TABLE_PLACES, null, null, null, null, null, null);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                int id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_ID));
-                String name = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_NAME));
-                String city = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_CITY));
-                String photoSrc = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_PHOTO_SRC));
-                String description = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_DESCRIPTION));
-                String address = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COLUMN_ADDRESS));
-
-                Place place = new Place(id, name, city, photoSrc, description, address);
-                placeList.add(place);
-
-            } while (cursor.moveToNext());
-
-            cursor.close();
-        }
-
-        db.close();
+        // Пример кода для загрузки данных из базы данных
+        this.places = dbHelper.getAllPlaces(); // Предполагается, что у вас есть метод в DBHelper для получения всех мест
         notifyDataSetChanged();
     }
 
-    @NonNull
-    @Override
-    public PlaceViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.gallery_item, parent, false);
-        return new PlaceViewHolder(view);
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        public ImageView placeImageView; // Добавьте это поле
+        public TextView nameTextView;
+        public TextView cityTextView;
+        public MaterialButton likeButton;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            placeImageView = itemView.findViewById(R.id.placeImage); // Инициализируйте элемент
+            nameTextView = itemView.findViewById(R.id.placeName);
+            cityTextView = itemView.findViewById(R.id.placeCity);
+            likeButton = itemView.findViewById(R.id.galleryBtnLove);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull PlaceViewHolder holder, int position) {
-        Place place = placeList.get(position);
-        holder.titleTextView.setText(place.getName());
+    public PlaceAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.gallery_item, parent, false);
+        return new ViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(PlaceAdapter.ViewHolder holder, int position) {
+        Place place = places.get(position);
+
+        holder.nameTextView.setText(place.getName());
         holder.cityTextView.setText(place.getCity());
+
+        // Загрузите изображение с помощью Glide
         Glide.with(context)
-                .load(place.getPhotoSrc())
-                .centerCrop()
-                .into(holder.photoImageView);
+                .load(place.getPhotoSrc()) // Убедитесь, что getPhotoSrc() возвращает правильный URL или путь к изображению
+                .placeholder(R.drawable.zaradye) // Изображение-заполнитель, пока грузится основное изображение
+                .error(R.drawable.zaradye) // Изображение для случая ошибки загрузки
+                .into(holder.placeImageView);
 
-        holder.viewButton.setOnClickListener(v -> {
-            Bundle bundle = new Bundle();
-            bundle.putInt("place_id", place.getId());
-            PlaceDetailsFragment placeDetailsFragment = new PlaceDetailsFragment();
-            placeDetailsFragment.setArguments(bundle);
+        // Получаем user ID из SharedPreferences
+        SharedPreferences sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+        int userId = sharedPreferences.getInt("user_id", -1);
 
-            ((FragmentActivity) context).getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragment_container, placeDetailsFragment)
-                    .addToBackStack(null)
-                    .commit();
+        // Проверяем, добавлено ли место в избранное
+        final boolean[] isLoved = {dbHelper.isPlaceLovedByUser(userId, place.getId())};
+        if (isLoved[0]) {
+            holder.likeButton.setIconResource(R.drawable.ic_heart_filled);
+        } else {
+            holder.likeButton.setIconResource(R.drawable.ic_heart);
+        }
+
+        // Обработчик нажатия на кнопку "Посмотреть"
+        holder.itemView.findViewById(R.id.viewButton).setOnClickListener(v -> {
+            // Создаем новый экземпляр PlaceDetailsFragment
+            PlaceDetailsFragment fragment = PlaceDetailsFragment.newInstance(place.getId());
+            // Получаем менеджер фрагментов и начинаем транзакцию
+            androidx.fragment.app.FragmentManager fragmentManager = ((MainActivity)context).getSupportFragmentManager();
+            androidx.fragment.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            // Заменяем текущий фрагмент на PlaceDetailsFragment
+            fragmentTransaction.replace(R.id.fragment_container, fragment);
+            fragmentTransaction.addToBackStack(null); // Добавляем транзакцию в стек возврата
+            fragmentTransaction.commit(); // Применяем транзакцию
+        });
+
+        // Обработчик нажатия на кнопку "Лайк"
+        holder.likeButton.setOnClickListener(v -> {
+            // Обновляем состояние избранности места
+            if (isLoved[0]) {
+                dbHelper.deleteUserPlace(userId, place.getId());
+                holder.likeButton.setIconResource(R.drawable.ic_heart);
+            } else {
+                dbHelper.insertUserPlace(userId, place.getId());
+                holder.likeButton.setIconResource(R.drawable.ic_heart_filled);
+            }
+            // Обновляем флаг избранности для текущего места
+            isLoved[0] = !isLoved[0];
         });
     }
-
     @Override
     public int getItemCount() {
-        return placeList.size();
-    }
-
-    class PlaceViewHolder extends RecyclerView.ViewHolder {
-
-        ImageView photoImageView;
-        TextView titleTextView;
-        TextView cityTextView;
-        MaterialButton viewButton;
-
-        public PlaceViewHolder(@NonNull View itemView) {
-            super(itemView);
-            photoImageView = itemView.findViewById(R.id.placeImage);
-            titleTextView = itemView.findViewById(R.id.placeName);
-            cityTextView = itemView.findViewById(R.id.placeCity);
-            viewButton = itemView.findViewById(R.id.viewButton);
-        }
+        return places.size();
     }
 }

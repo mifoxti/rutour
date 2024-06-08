@@ -1,5 +1,7 @@
 package com.example.rutour;
 
+import java.util.List;
+
 public class Place {
     private int id;
     private String name;
@@ -17,6 +19,11 @@ public class Place {
         this.photoSrc = photoSrc;
         this.description = description;
         this.address = address;
+    }
+
+    public Place(String name, String city) {
+        this.name = name;
+        this.city = city;
     }
 
     public int getId() {
@@ -43,4 +50,3 @@ public class Place {
         return address;
     }
 }
-

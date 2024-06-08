@@ -1,5 +1,7 @@
 package com.example.rutour;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -57,6 +59,7 @@ public class ProfileUnlogged extends Fragment {
             } else {
                 long result = dbHelper.insertUser(login, password);
                 if (result != -1) {
+                    saveUserIdToPreferences(getContext(), (int) result);
                     Snackbar.make(getView(), "Регистрация успешна", Snackbar.LENGTH_SHORT).show();
                     loginText.setText("");
                     passwordText.setText("");
@@ -76,11 +79,20 @@ public class ProfileUnlogged extends Fragment {
         } else {
             boolean exists = dbHelper.checkUser(login, password);
             if (exists) {
+                int userId = dbHelper.getUserId(login);
+                saveUserIdToPreferences(getContext(), userId);
                 Snackbar.make(getView(), "Вход успешен", Snackbar.LENGTH_SHORT).show();
                 // Переход на другой фрагмент или активити после успешного входа
             } else {
                 Snackbar.make(getView(), "Неправильный логин или пароль", Snackbar.LENGTH_SHORT).show();
             }
         }
+    }
+
+    private void saveUserIdToPreferences(Context context, int userId) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("user_id", userId);
+        editor.apply();
     }
 }

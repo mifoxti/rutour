@@ -1,42 +1,31 @@
 package com.example.rutour;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link LovedFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class LovedFragment extends Fragment {
+import java.util.List;
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+public class LovedFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private DBHelper dbHelper;
 
-    public LovedFragment() {
-        // Required empty public constructor
-    }
+    private RecyclerView recyclerView;
+    private PlaceAdapter placeAdapter;
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment LovedFragment.
-     */
-    // TODO: Rename and change types and number of parameters
+    public LovedFragment() {}
+
     public static LovedFragment newInstance(String param1, String param2) {
         LovedFragment fragment = new LovedFragment();
         Bundle args = new Bundle();
@@ -49,16 +38,45 @@ public class LovedFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        dbHelper = new DBHelper(getContext()); // Инициализация dbHelper
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_loved, container, false);
+        View view = inflater.inflate(R.layout.fragment_loved, container, false);
+
+        // Initialize RecyclerView
+        recyclerView = view.findViewById(R.id.lovedRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        // Set up the adapter
+        placeAdapter = new PlaceAdapter(getContext());
+        recyclerView.setAdapter(placeAdapter);
+
+        // Load loved places from database
+        loadLovedPlaces();
+
+        return view;
+    }
+
+    private void loadLovedPlaces() {
+        // Проверяем, что dbHelper был инициализирован
+        if (dbHelper == null) {
+            dbHelper = new DBHelper(getContext());
+        }
+
+        // Get user ID from SharedPreferences
+        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+        int userId = sharedPreferences.getInt("user_id", -1);
+
+        // Get the list of place IDs liked by the user
+        List<Integer> lovedPlaceIds = dbHelper.getUserLovedPlaceIds(userId);
+
+        // Get the details of loved places from the database
+        List<Place> lovedPlaces = dbHelper.getPlacesByIds(lovedPlaceIds);
+
+        // Update the adapter with the loved places
+        placeAdapter.setPlaces(lovedPlaces);
     }
 }
