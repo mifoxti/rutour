@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:fontFamily="@font/my_font"
     tools:context=".MainActivity"
+
     >
 
     <FrameLayout
@@ -13,6 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@id/menu_bar"
+        android:background="@drawable/back"
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"

@@ -1,46 +1,86 @@
 package com.example.rutour;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import com.google.android.material.snackbar.Snackbar;
 
 public class ProfileUnlogged extends Fragment {
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private EditText loginText, passwordText;
+    private Button registerButton, loginButton;
+    private DBHelper dbHelper;
 
     public ProfileUnlogged() {
-    }
-
-    public static ProfileUnlogged newInstance(String param1, String param2) {
-        ProfileUnlogged fragment = new ProfileUnlogged();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_profile_unlogged, container, false);
+
+        loginText = view.findViewById(R.id.loginText);
+        passwordText = view.findViewById(R.id.passwordText);
+        registerButton = view.findViewById(R.id.registerButton);
+        loginButton = view.findViewById(R.id.loginButton);
+        dbHelper = new DBHelper(getContext());
+
+        registerButton.setOnClickListener(v -> registerUser());
+        loginButton.setOnClickListener(v -> loginUser());
+
+        return view;
+    }
+
+    private void registerUser() {
+        String login = loginText.getText().toString().trim();
+        String password = passwordText.getText().toString().trim();
+
+        if (login.isEmpty() || password.isEmpty()) {
+            Snackbar.make(getView(), "Пожалуйста, заполните все поля", Snackbar.LENGTH_SHORT).show();
+        } else {
+            if (dbHelper.isLoginExists(login)) {
+                Snackbar.make(getView(), "Логин уже существует", Snackbar.LENGTH_SHORT).show();
+            } else {
+                long result = dbHelper.insertUser(login, password);
+                if (result != -1) {
+                    Snackbar.make(getView(), "Регистрация успешна", Snackbar.LENGTH_SHORT).show();
+                    loginText.setText("");
+                    passwordText.setText("");
+                } else {
+                    Snackbar.make(getView(), "Ошибка при регистрации", Snackbar.LENGTH_SHORT).show();
+                }
+            }
         }
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_profile_unlogged, container, false);
+    private void loginUser() {
+        String login = loginText.getText().toString().trim();
+        String password = passwordText.getText().toString().trim();
+
+        if (login.isEmpty() || password.isEmpty()) {
+            Snackbar.make(getView(), "Пожалуйста, заполните все поля", Snackbar.LENGTH_SHORT).show();
+        } else {
+            boolean exists = dbHelper.checkUser(login, password);
+            if (exists) {
+                Snackbar.make(getView(), "Вход успешен", Snackbar.LENGTH_SHORT).show();
+                // Переход на другой фрагмент или активити после успешного входа
+            } else {
+                Snackbar.make(getView(), "Неправильный логин или пароль", Snackbar.LENGTH_SHORT).show();
+            }
+        }
     }
 }
