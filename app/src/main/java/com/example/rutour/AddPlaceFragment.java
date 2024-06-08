@@ -1,11 +1,8 @@
 package com.example.rutour;
 
 import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -22,6 +19,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 import com.google.android.material.snackbar.Snackbar;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,10 +27,10 @@ import java.io.InputStream;
 
 public class AddPlaceFragment extends Fragment {
 
-    private EditText placeName, placeCity, placeDescription;
+    private EditText placeName, placeCity, placeDescription, placeAddress;
     private Button loadImageButton, saveButton;
     private ImageView previewImage;
-    private String imagePath = null; // Добавляем поле для пути к изображению
+    private String imagePath = null;
     private static final int IMAGE_PICK_REQUEST = 100;
 
     public AddPlaceFragment() {
@@ -47,9 +45,10 @@ public class AddPlaceFragment extends Fragment {
         placeName = view.findViewById(R.id.placeName);
         placeCity = view.findViewById(R.id.placeCity);
         placeDescription = view.findViewById(R.id.placeDescription);
+        placeAddress = view.findViewById(R.id.adressPlace);
         loadImageButton = view.findViewById(R.id.loadImage);
         saveButton = view.findViewById(R.id.savePlace);
-        previewImage = view.findViewById(R.id.previewImage); // Добавляем ImageView для предпросмотра
+        previewImage = view.findViewById(R.id.previewImage);
 
         loadImageButton.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -57,24 +56,23 @@ public class AddPlaceFragment extends Fragment {
         });
 
         saveButton.setOnClickListener(v -> {
-            // Обработчик нажатия для сохранения места
             String name = placeName.getText().toString().trim();
             String city = placeCity.getText().toString().trim();
             String description = placeDescription.getText().toString().trim();
+            String address = placeAddress.getText().toString().trim();
 
-            if (!name.isEmpty() && !city.isEmpty() && !description.isEmpty() && imagePath != null) {
-                // Сохранение данных в базу данных
+            if (!name.isEmpty() && !city.isEmpty() && !description.isEmpty() && !address.isEmpty() && imagePath != null) {
                 DBHelper dbHelper = new DBHelper(requireContext());
-                long result = dbHelper.insertPlace(name, city, description, imagePath);
+                long result = dbHelper.insertPlace(name, city, description, imagePath, address);
 
                 if (result != -1) {
                     Toast.makeText(requireContext(), "Место успешно сохранено", Toast.LENGTH_SHORT).show();
-                    // Очистка полей после сохранения
                     placeName.setText("");
                     placeCity.setText("");
                     placeDescription.setText("");
-                    previewImage.setImageResource(0); // Очистка изображения
-                    imagePath = null; // Сброс пути к изображению
+                    placeAddress.setText("");
+                    previewImage.setImageResource(0);
+                    imagePath = null;
                 } else {
                     Toast.makeText(requireContext(), "Ошибка при сохранении места", Toast.LENGTH_SHORT).show();
                 }
@@ -90,12 +88,11 @@ public class AddPlaceFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == IMAGE_PICK_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
-            // Получение выбранного изображения из галереи
             Uri imageUri = data.getData();
             try {
                 imagePath = saveImageToInternalStorage(imageUri);
                 Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
-                previewImage.setImageBitmap(bitmap); // Отображение изображения в ImageView
+                previewImage.setImageBitmap(bitmap);
                 Toast.makeText(requireContext(), "Изображение успешно загружено", Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -104,7 +101,6 @@ public class AddPlaceFragment extends Fragment {
         }
     }
 
-    // Метод для сохранения изображения во внутреннее хранилище и получения пути к файлу
     private String saveImageToInternalStorage(Uri imageUri) throws IOException {
         InputStream inputStream = requireContext().getContentResolver().openInputStream(imageUri);
         Bitmap bitmap = BitmapFactory.decodeStream(inputStream);

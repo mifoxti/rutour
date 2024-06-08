@@ -3,6 +3,7 @@ package com.example.rutour;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -29,11 +31,11 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
         loadPlacesFromDatabase();
     }
 
-    public void loadPlacesFromDatabase() { // Изменён на public
+    public void loadPlacesFromDatabase() {
         DBHelper dbHelper = new DBHelper(context);
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        placeList.clear(); // Очистка списка перед загрузкой
+        placeList.clear();
 
         Cursor cursor = db.query(DBHelper.TABLE_PLACES, null, null, null, null, null, null);
 
@@ -55,7 +57,7 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
         }
 
         db.close();
-        notifyDataSetChanged(); // Уведомляем адаптер об изменении данных
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -70,11 +72,23 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
         Place place = placeList.get(position);
         holder.titleTextView.setText(place.getName());
         holder.cityTextView.setText(place.getCity());
-        // Загрузка изображения с помощью Glide
         Glide.with(context)
                 .load(place.getPhotoSrc())
                 .centerCrop()
                 .into(holder.photoImageView);
+
+        holder.viewButton.setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putInt("place_id", place.getId());
+            PlaceDetailsFragment placeDetailsFragment = new PlaceDetailsFragment();
+            placeDetailsFragment.setArguments(bundle);
+
+            ((FragmentActivity) context).getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, placeDetailsFragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
     }
 
     @Override
@@ -95,13 +109,6 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
             titleTextView = itemView.findViewById(R.id.placeName);
             cityTextView = itemView.findViewById(R.id.placeCity);
             viewButton = itemView.findViewById(R.id.viewButton);
-
-            viewButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    // Обработка нажатия кнопки
-                }
-            });
         }
     }
 }
