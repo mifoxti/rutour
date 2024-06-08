@@ -67,7 +67,7 @@ public class LovedFragment extends Fragment {
         }
 
         // Get user ID from SharedPreferences
-        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         int userId = sharedPreferences.getInt("user_id", -1);
 
         // Get the list of place IDs liked by the user

@@ -1,7 +1,6 @@
 package com.example.rutour;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +77,7 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.ViewHolder> 
                 .into(holder.placeImageView);
 
         // Получаем user ID из SharedPreferences
-        SharedPreferences sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         int userId = sharedPreferences.getInt("user_id", -1);
 
         // Проверяем, добавлено ли место в избранное
@@ -103,16 +103,22 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.ViewHolder> 
 
         // Обработчик нажатия на кнопку "Лайк"
         holder.likeButton.setOnClickListener(v -> {
-            // Обновляем состояние избранности места
-            if (isLoved[0]) {
-                dbHelper.deleteUserPlace(userId, place.getId());
-                holder.likeButton.setIconResource(R.drawable.ic_heart);
+
+            if (userId != -1) {
+                // Если userId не равен -1, обрабатываем нажатие на кнопку
+                if (isLoved[0]) {
+                    dbHelper.deleteUserPlace(userId, place.getId());
+                    holder.likeButton.setIconResource(R.drawable.ic_heart);
+                } else {
+                    dbHelper.insertUserPlace(userId, place.getId());
+                    holder.likeButton.setIconResource(R.drawable.ic_heart_filled);
+                }
+                // Обновляем флаг избранности для текущего места
+                isLoved[0] = !isLoved[0];
             } else {
-                dbHelper.insertUserPlace(userId, place.getId());
-                holder.likeButton.setIconResource(R.drawable.ic_heart_filled);
+                // Если userId равен -1, показываем Snackbar
+                Snackbar.make(holder.itemView, "Войдите в аккаунт, чтобы лайкнуть", Snackbar.LENGTH_LONG).show();
             }
-            // Обновляем флаг избранности для текущего места
-            isLoved[0] = !isLoved[0];
         });
     }
     @Override
