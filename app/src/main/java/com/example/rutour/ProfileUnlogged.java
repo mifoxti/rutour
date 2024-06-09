@@ -59,10 +59,13 @@ public class ProfileUnlogged extends Fragment {
             } else {
                 long result = dbHelper.insertUser(login, password);
                 if (result != -1) {
-                    saveUserIdToPreferences(getContext(), (int) result);
+                    saveUserToPreferences(getContext(), (int) result, login);
                     Snackbar.make(getView(), "Регистрация успешна", Snackbar.LENGTH_SHORT).show();
                     loginText.setText("");
                     passwordText.setText("");
+
+                    // Переключаем фрагмент на ProfileLogged
+                    switchToProfileLogged();
                 } else {
                     Snackbar.make(getView(), "Ошибка при регистрации", Snackbar.LENGTH_SHORT).show();
                 }
@@ -80,19 +83,31 @@ public class ProfileUnlogged extends Fragment {
             boolean exists = dbHelper.checkUser(login, password);
             if (exists) {
                 int userId = dbHelper.getUserId(login);
-                saveUserIdToPreferences(getContext(), userId);
+                saveUserToPreferences(getContext(), userId, login);
                 Snackbar.make(getView(), "Вход успешен", Snackbar.LENGTH_SHORT).show();
-                // Переход на другой фрагмент или активити после успешного входа
+                loginText.setText("");
+                passwordText.setText("");
+
+                // Переключаем фрагмент на ProfileLogged
+                switchToProfileLogged();
             } else {
                 Snackbar.make(getView(), "Неправильный логин или пароль", Snackbar.LENGTH_SHORT).show();
             }
         }
     }
 
-    private void saveUserIdToPreferences(Context context, int userId) {
+    private void saveUserToPreferences(Context context, int userId, String login) {
         SharedPreferences sharedPreferences = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("user_id", userId);
+        editor.putString("user_login", login);
         editor.apply();
+    }
+
+    private void switchToProfileLogged() {
+        Fragment profileLoggedFragment = new ProfileLogged();
+        requireActivity().getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, profileLoggedFragment)
+                .commit();
     }
 }
