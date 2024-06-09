@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,6 +34,8 @@ public class AddPlaceFragment extends Fragment {
     private String imagePath = null;
     private static final int IMAGE_PICK_REQUEST = 100;
 
+    private static final String ARG_PLACE = "place";
+
     public AddPlaceFragment() {
         // Required empty public constructor
     }
@@ -54,7 +57,6 @@ public class AddPlaceFragment extends Fragment {
             Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(intent, IMAGE_PICK_REQUEST);
         });
-
         saveButton.setOnClickListener(v -> {
             String name = placeName.getText().toString().trim();
             String city = placeCity.getText().toString().trim();
@@ -63,7 +65,29 @@ public class AddPlaceFragment extends Fragment {
 
             if (!name.isEmpty() && !city.isEmpty() && !description.isEmpty() && !address.isEmpty() && imagePath != null) {
                 DBHelper dbHelper = new DBHelper(requireContext());
-                long result = dbHelper.insertPlace(name, city, description, imagePath, address);
+                long result;
+
+                // Проверяем, был ли передан объект Place через аргументы
+                if (getArguments() != null && getArguments().containsKey(ARG_PLACE)) {
+                    // Если объект Place был передан, обновляем его данные
+                    Place place = getArguments().getParcelable(ARG_PLACE);
+                    if (place != null) {
+                        place.setName(name);
+                        place.setCity(city);
+                        place.setDescription(description);
+                        place.setAddress(address);
+                        place.setPhotoSrc(imagePath);
+
+                        // Вызываем метод обновления места в базе данных
+                        result = dbHelper.updatePlace(place);
+                    } else {
+                        // Если объект Place не был передан, создаем новое место
+                        result = dbHelper.insertPlace(name, city, description, imagePath, address);
+                    }
+                } else {
+                    // Если объект Place не был передан, создаем новое место
+                    result = dbHelper.insertPlace(name, city, description, imagePath, address);
+                }
 
                 if (result != -1) {
                     Toast.makeText(requireContext(), "Место успешно сохранено", Toast.LENGTH_SHORT).show();
@@ -113,5 +137,41 @@ public class AddPlaceFragment extends Fragment {
         fos.close();
 
         return file.getAbsolutePath();
+    }
+
+    public static AddPlaceFragment newInstance(Place place) {
+        AddPlaceFragment fragment = new AddPlaceFragment();
+        Bundle args = new Bundle();
+        args.putParcelable(ARG_PLACE, place);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            Place place = getArguments().getParcelable(ARG_PLACE);
+            if (place != null) {
+                Log.d("AddPlaceFragment", "Name: " + place.getName());
+                Log.d("AddPlaceFragment", "City: " + place.getCity());
+                Log.d("AddPlaceFragment", "Description: " + place.getDescription());
+                Log.d("AddPlaceFragment", "Address: " + place.getAddress());
+
+                if (placeName != null) {
+                    placeName.setText(place.getName());
+                }
+                if (placeCity != null) {
+                    placeCity.setText(place.getCity());
+                }
+                if (placeDescription != null) {
+                    placeDescription.setText(place.getDescription());
+                }
+                if (placeAddress != null) {
+                    placeAddress.setText(place.getAddress());
+                }
+                imagePath = place.getPhotoSrc();
+            }
+        }
     }
 }

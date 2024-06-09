@@ -350,4 +350,25 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         return places;
     }
+
+    public void deletePlace(int placeId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete("Place", "id = ?", new String[]{String.valueOf(placeId)});
+        db.delete("UsersPlaces", "place_id = ?", new String[]{String.valueOf(placeId)});
+        db.close();
+    }
+
+    public long updatePlace(Place place) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_NAME, place.getName());
+        values.put(COLUMN_CITY, place.getCity());
+        values.put(COLUMN_DESCRIPTION, place.getDescription());
+        values.put(COLUMN_PHOTO_SRC, place.getPhotoSrc());
+        values.put(COLUMN_ADDRESS, place.getAddress());
+        long result = db.update(TABLE_PLACES, values, COLUMN_ID + " = ?",
+                new String[]{String.valueOf(place.getId())});
+        db.close();
+        return result;
+    }
 }

@@ -16,7 +16,7 @@ import com.google.android.material.snackbar.Snackbar;
 public class CreateFragment extends Fragment {
 
     private RecyclerView recyclerView;
-    private PlaceAdapter adapter;
+    private PlaceAdapterModern adapter;
     private Button createButton, deleteAllButton;
 
     public CreateFragment() {
@@ -34,7 +34,7 @@ public class CreateFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new PlaceAdapter(requireContext());
+        adapter = new PlaceAdapterModern(requireContext(), true); // Передаем контекст и флаг isCreateTab
         recyclerView.setAdapter(adapter);
 
         createButton.setOnClickListener(v -> {
