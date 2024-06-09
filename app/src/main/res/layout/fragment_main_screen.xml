@@ -1,14 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".main_screen">
+    android:layout_height="match_parent">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:layout_marginTop="40dp"
-        android:id="@+id/recyclerView"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:listitem="@layout/gallery_item"/>
-</FrameLayout>
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Заголовок -->
+        <TextView
+            android:id="@+id/headerText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:text="Эти места стоит посетить"
+            android:fontFamily="@font/my_font"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:padding="16dp" />
+
+        <!-- SearchView -->
+        <androidx.appcompat.widget.SearchView
+            android:id="@+id/searchView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:queryHint="Поиск мест"
+            android:iconifiedByDefault="false"
+            android:layout_margin="16dp"/>
+
+        <!-- RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            tools:listitem="@layout/gallery_item"/>
+
+    </LinearLayout>
+</ScrollView>
